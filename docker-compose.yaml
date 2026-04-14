@@ -15,6 +15,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      - mini-stripe-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
       interval: 10s
@@ -33,6 +35,8 @@ services:
       - "5433:5432"
     volumes:
       - postgres_account_data:/var/lib/postgresql/data
+    networks:
+      - mini-stripe-network
 
   postgres-payment:
     image: postgres:16
@@ -45,6 +49,8 @@ services:
       - "5434:5432"
     volumes:
       - postgres_payment_data:/var/lib/postgresql/data
+    networks:
+      - mini-stripe-network
 
   # ─── Redis ─────────────────────────────────────────────────
 
@@ -53,6 +59,8 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - mini-stripe-network
 
   # ─── Kafka ─────────────────────────────────────────────────
 
@@ -61,6 +69,8 @@ services:
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - mini-stripe-network
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -74,6 +84,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - mini-stripe-network
 
   # ─── MailHog (email local) ──────────────────────────────────
 
@@ -83,6 +95,8 @@ services:
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # UI web
+    networks:
+      - mini-stripe-network
 
   # ─── Microserviços ──────────────────────────────────────────
 
