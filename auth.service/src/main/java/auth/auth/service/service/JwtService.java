@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtService {
+public class JwtService implements TokenService {
 
     @Value("${jwt.secret}")
     private String secret;
@@ -24,15 +24,20 @@ public class JwtService {
     @Value("${jwt.refresh-expiration}")
     private Long refreshExpiration;
 
+    @Override
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", userDetails.getAuthorities()
                 .iterator().next().getAuthority());
+        claims.put("type", "access");
         return buildToken(claims, userDetails.getUsername(), expiration);
     }
 
+    @Override
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpiration);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+        return buildToken(claims, userDetails.getUsername(), refreshExpiration);
     }
 
     private String buildToken(Map<String, Object> claims, String subject, Long expiration) {
@@ -45,11 +50,13 @@ public class JwtService {
                 .compact();
     }
 
+    @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
+    @Override
     public boolean isTokenValid(String token) {
         try {
             Jwts.parser()
@@ -62,11 +69,12 @@ public class JwtService {
         }
     }
 
+    @Override
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-
+    @Override
     public Long getExpiration() {
         return expiration;
     }
@@ -88,3 +96,4 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 }
+
