@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/payment.service/src/test/java/payment/payment/service/ApplicationTests.java">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/payment.service/src/test/java/payment/payment/service/ApplicationTests.java" />
+              <option name="originalContent" value="package payment.payment.service;&#10;&#10;import org.junit.jupiter.api.Test;&#10;import org.springframework.boot.test.context.SpringBootTest;&#10;&#10;@SpringBootTest&#10;class ApplicationTests {&#10;&#10;&#9;@Test&#10;&#9;void contextLoads() {&#10;&#9;}&#10;&#10;}&#10;" />
+              <option name="updatedContent" value="package payment.payment.service;&#10;&#10;import org.junit.jupiter.api.Test;&#10;import org.springframework.boot.test.context.SpringBootTest;&#10;import org.springframework.test.context.ActiveProfiles;&#10;&#10;@SpringBootTest&#10;@ActiveProfiles(&quot;test&quot;)&#10;class ApplicationTests {&#10;&#10;&#9;@Test&#10;&#9;void contextLoads() {&#10;&#9;}&#10;&#10;}&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

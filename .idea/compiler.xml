@@ -7,9 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="gateway" />
-        <module name="payment.service" />
       </profile>
-      <profile name="Annotation profile for account.service" enabled="true">
+      <profile name="Annotation profile for payment.service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -18,6 +17,7 @@
         </processorPath>
         <module name="auth.service" />
         <module name="account.service" />
+        <module name="payment.service" />
       </profile>
     </annotationProcessing>
   </component>
