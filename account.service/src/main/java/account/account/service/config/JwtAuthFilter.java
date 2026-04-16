@@ -29,10 +29,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+        String method = request.getMethod();
+        String path = request.getRequestURI();
 
         // Se não tem header ou não começa com "Bearer ", pula o filtro
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("Authorization header ausente ou inválido");
+            log.warn("Authorization header ausente ou inválido para {} {}", method, path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,18 +58,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             if (jwtService.isTokenValid(token)) {
-                var username = jwtService.extractUsername(token);
-                var role = jwtService.extractRole(token);
+                String username = jwtService.extractUsername(token);
+                String role = jwtService.extractRole(token);
 
-                log.debug("JWT validado com sucesso para username: {}", username);
+                if (username != null && !username.isBlank() && role != null && !role.isBlank()) {
+                    log.debug("JWT validado com sucesso para username: {}", username);
 
-                var auth = new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        List.of(new SimpleGrantedAuthority(role))
-                );
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            List.of(new SimpleGrantedAuthority(role))
+                    );
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    log.warn("Token JWT contém claims inválidos. Username: {}, Role: {}", username, role);
+                }
             } else {
                 log.warn("Token JWT expirado ou inválido");
             }

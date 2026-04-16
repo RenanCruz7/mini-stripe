@@ -47,7 +47,7 @@ public class AuthService {
         var accessToken = tokenService.generateToken(userDetails);
         var refreshToken = tokenService.generateRefreshToken(userDetails);
 
-        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration());
+        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration(), user.getId());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -69,7 +69,7 @@ public class AuthService {
         var refreshToken = tokenService.generateRefreshToken(userDetails);
 
         log.info("Login bem-sucedido: {}", user.getEmail());
-        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration());
+        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration(), user.getId());
     }
 
     public AuthResponse refresh(RefreshTokenRequest request) {
@@ -87,6 +87,6 @@ public class AuthService {
         var refreshToken = tokenService.generateRefreshToken(userDetails);
 
         log.info("Token atualizado para: {}", email);
-        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration());
+        return AuthResponse.of(accessToken, refreshToken, tokenService.getExpiration(), user.getId());
     }
 }

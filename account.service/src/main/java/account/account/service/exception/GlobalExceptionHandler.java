@@ -60,8 +60,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        log.error("Unhandled exception occurred", ex);
-        ErrorResponse response = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error");
+        log.error("ERRO NÃO TRATADO - {} - Mensagem: {}", ex.getClass().getName(), ex.getMessage());
+        log.error("Stack trace completo:", ex);
+        ErrorResponse response = new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "Erro interno: " + ex.getMessage()
+        );
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -30,14 +30,29 @@ public class JwtService implements TokenService {
         claims.put("role", userDetails.getAuthorities()
                 .iterator().next().getAuthority());
         claims.put("type", "access");
-        return buildToken(claims, userDetails.getUsername(), expiration);
+        claims.put("email", userDetails.getUsername());
+
+        // Extract UUID from CustomUserDetails and use it as subject
+        String userId = extractUserId(userDetails);
+        return buildToken(claims, userId, expiration);
     }
 
     @Override
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
-        return buildToken(claims, userDetails.getUsername(), refreshExpiration);
+        claims.put("email", userDetails.getUsername());
+
+        // Extract UUID from CustomUserDetails and use it as subject
+        String userId = extractUserId(userDetails);
+        return buildToken(claims, userId, refreshExpiration);
+    }
+
+    private String extractUserId(UserDetails userDetails) {
+        if (userDetails instanceof auth.auth.service.domain.security.CustomUserDetails) {
+            return ((auth.auth.service.domain.security.CustomUserDetails) userDetails).getUser().getId().toString();
+        }
+        throw new IllegalArgumentException("UserDetails must be CustomUserDetails");
     }
 
     private String buildToken(Map<String, Object> claims, String subject, Long expiration) {
@@ -72,6 +87,10 @@ public class JwtService implements TokenService {
     @Override
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
     @Override

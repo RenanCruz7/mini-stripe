@@ -29,10 +29,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+        String method = request.getMethod();
+        String path = request.getRequestURI();
 
         // Se não tem header ou não começa com "Bearer ", pula o filtro
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("Authorization header ausente ou inválido");
+            log.warn("Authorization header ausente ou inválido para {} {}", method, path);
             filterChain.doFilter(request, response);
             return;
         }

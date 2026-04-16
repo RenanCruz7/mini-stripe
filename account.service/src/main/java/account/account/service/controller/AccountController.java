@@ -6,6 +6,7 @@ import account.account.service.domain.dto.DepositRequest;
 import account.account.service.domain.dto.WithdrawRequest;
 import account.account.service.exception.AccessDeniedException;
 import account.account.service.service.AccountService;
+import account.account.service.service.JwtService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,11 +32,15 @@ import java.util.UUID;
 public class AccountController {
 
     private final AccountService service;
+    private final JwtService jwtService;
 
     @RateLimiter(name = "accountCreation")
     @PostMapping
-    public ResponseEntity<AccountResponse> create(@Valid @RequestBody CreateAccountRequest request, Authentication authentication) {
-        String authenticatedUserId = authentication.getName();
+    public ResponseEntity<AccountResponse> create(
+            @Valid @RequestBody CreateAccountRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        String authenticatedUserId = extractUserIdFromToken(authHeader);
         log.info("Account creation request for userId: {} by authenticated user: {}", request.userId(), authenticatedUserId);
 
         validateOwnership(request.userId(), authenticatedUserId);
@@ -44,8 +50,11 @@ public class AccountController {
 
     @RateLimiter(name = "accountOperations")
     @GetMapping("/{userId}")
-    public ResponseEntity<AccountResponse> getByUserId(@PathVariable UUID userId, Authentication authentication) {
-        String authenticatedUserId = authentication.getName();
+    public ResponseEntity<AccountResponse> getByUserId(
+            @PathVariable UUID userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        String authenticatedUserId = extractUserIdFromToken(authHeader);
 
         validateOwnership(userId, authenticatedUserId);
 
@@ -57,9 +66,9 @@ public class AccountController {
     public ResponseEntity<AccountResponse> deposit(
             @PathVariable UUID userId,
             @Valid @RequestBody DepositRequest request,
-            Authentication authentication
+            @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        String authenticatedUserId = authentication.getName();
+        String authenticatedUserId = extractUserIdFromToken(authHeader);
 
         validateOwnership(userId, authenticatedUserId);
 
@@ -71,9 +80,9 @@ public class AccountController {
     public ResponseEntity<AccountResponse> withdraw(
             @PathVariable UUID userId,
             @Valid @RequestBody WithdrawRequest request,
-            Authentication authentication
+            @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        String authenticatedUserId = authentication.getName();
+        String authenticatedUserId = extractUserIdFromToken(authHeader);
 
         validateOwnership(userId, authenticatedUserId);
 
@@ -82,12 +91,29 @@ public class AccountController {
 
     @RateLimiter(name = "accountOperations")
     @PatchMapping("/{userId}/block")
-    public ResponseEntity<AccountResponse> block(@PathVariable UUID userId, Authentication authentication) {
-        String authenticatedUserId = authentication.getName();
+    public ResponseEntity<AccountResponse> block(
+            @PathVariable UUID userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        String authenticatedUserId = extractUserIdFromToken(authHeader);
 
         validateOwnership(userId, authenticatedUserId);
 
         return ResponseEntity.ok(service.blockAccount(userId));
+    }
+
+    private String extractUserIdFromToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new AccessDeniedException("Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        try {
+            return jwtService.extractUsername(token);
+        } catch (Exception e) {
+            log.error("Failed to extract user ID from token: {}", e.getMessage());
+            throw new AccessDeniedException("Invalid token");
+        }
     }
 
     private void validateOwnership(UUID userId, String authenticatedUserId) {

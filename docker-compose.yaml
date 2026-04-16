@@ -49,8 +49,8 @@ services:
     container_name: postgres-payment
     environment:
       POSTGRES_DB: payment_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "5434:5432"
     volumes:
@@ -111,15 +111,17 @@ services:
   # ─── Microserviços ──────────────────────────────────────────
 
   auth-service:
-    image: mini-stripe-auth-service:latest
+    build:
+      context: ./auth.service
+      dockerfile: Dockerfile
     container_name: auth-service
     ports:
       - "8081:8081"
+    env_file: .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      JWT_SECRET: ${JWT_SECRET:-3f8a2b1c9d4e7f6a0b5c8d2e1f4a7b3c9d6e2f5a8b1c4d7e0f3a6b9c2d5e8f1a}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -139,13 +141,12 @@ services:
     container_name: account-service
     ports:
       - "8082:8082"
+    env_file: .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-account:5432/account_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-3f8a2b1c9d4e7f6a0b5c8d2e1f4a7b3c9d6e2f5a8b1c4d7e0f3a6b9c2d5e8f1a}
     depends_on:
       postgres-account:
         condition: service_healthy
@@ -167,13 +168,13 @@ services:
     container_name: payment-service
     ports:
       - "8083:8083"
+    env_file: .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payment:5432/payment_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ACCOUNT_SERVICE_URL: http://account-service:8082
-      JWT_SECRET: ${JWT_SECRET:-3f8a2b1c9d4e7f6a0b5c8d2e1f4a7b3c9d6e2f5a8b1c4d7e0f3a6b9c2d5e8f1a}
     depends_on:
       postgres-payment:
         condition: service_started

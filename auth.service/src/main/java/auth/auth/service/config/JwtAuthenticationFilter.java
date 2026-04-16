@@ -59,11 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (jwtService.isTokenValid(jwt)) {
-                final String username = jwtService.extractUsername(jwt);
+                final String email = jwtService.extractEmail(jwt);
 
-                log.debug("JWT validado com sucesso para username: {}", username);
+                log.debug("JWT validado com sucesso para email: {}", email);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
