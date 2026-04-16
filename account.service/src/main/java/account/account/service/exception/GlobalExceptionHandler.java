@@ -1,6 +1,7 @@
 package account.account.service.exception;
 
 import jakarta.persistence.OptimisticLockException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,26 +12,31 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusiness(BusinessException ex) {
+        log.warn("BusinessException: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<Map<String, Object>> handleInsufficientBalance(InsufficientBalanceException ex) {
+        log.warn("InsufficientBalanceException: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
     }
 
     @ExceptionHandler(OptimisticLockException.class)
     public ResponseEntity<Map<String, Object>> handleOptimisticLock(OptimisticLockException ex) {
+        log.error("OptimisticLockException", ex);
         return buildResponse(HttpStatus.CONFLICT, "Operação conflitante detectada, tente novamente");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        log.warn("MethodArgumentNotValidException: {}", ex.getMessage());
         var errors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
@@ -40,6 +46,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+        log.error("Unhandled exception occurred", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor");
     }
 
