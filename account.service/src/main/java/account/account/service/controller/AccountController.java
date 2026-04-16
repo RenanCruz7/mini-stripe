@@ -1,6 +1,9 @@
 package account.account.service.controller;
 
-import account.account.service.domain.dto.*;
+import account.account.service.domain.dto.AccountResponse;
+import account.account.service.domain.dto.CreateAccountRequest;
+import account.account.service.domain.dto.DepositRequest;
+import account.account.service.domain.dto.WithdrawRequest;
 import account.account.service.exception.AccessDeniedException;
 import account.account.service.service.AccountService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -10,7 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -28,9 +37,7 @@ public class AccountController {
         String authenticatedUserId = authentication.getName();
         log.info("Account creation request for userId: {} by authenticated user: {}", request.userId(), authenticatedUserId);
 
-        if (!request.userId().toString().equals(authenticatedUserId)) {
-            throw new AccessDeniedException("Usuário não autorizado para criar conta de outro usuário");
-        }
+        validateOwnership(request.userId(), authenticatedUserId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createAccount(request.userId()));
     }
@@ -40,9 +47,7 @@ public class AccountController {
     public ResponseEntity<AccountResponse> getByUserId(@PathVariable UUID userId, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
 
-        if (!userId.toString().equals(authenticatedUserId)) {
-            throw new AccessDeniedException("Usuário não autorizado para acessar esta conta");
-        }
+        validateOwnership(userId, authenticatedUserId);
 
         return ResponseEntity.ok(service.getByUserId(userId));
     }
@@ -56,9 +61,7 @@ public class AccountController {
     ) {
         String authenticatedUserId = authentication.getName();
 
-        if (!userId.toString().equals(authenticatedUserId)) {
-            throw new AccessDeniedException("Usuário não autorizado para realizar operações nesta conta");
-        }
+        validateOwnership(userId, authenticatedUserId);
 
         return ResponseEntity.ok(service.deposit(userId, request.amount()));
     }
@@ -72,9 +75,7 @@ public class AccountController {
     ) {
         String authenticatedUserId = authentication.getName();
 
-        if (!userId.toString().equals(authenticatedUserId)) {
-            throw new AccessDeniedException("Usuário não autorizado para realizar operações nesta conta");
-        }
+        validateOwnership(userId, authenticatedUserId);
 
         return ResponseEntity.ok(service.withdraw(userId, request.amount()));
     }
@@ -84,10 +85,15 @@ public class AccountController {
     public ResponseEntity<AccountResponse> block(@PathVariable UUID userId, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
 
-        if (!userId.toString().equals(authenticatedUserId)) {
-            throw new AccessDeniedException("Usuário não autorizado para bloquear esta conta");
-        }
+        validateOwnership(userId, authenticatedUserId);
 
         return ResponseEntity.ok(service.blockAccount(userId));
+    }
+
+    private void validateOwnership(UUID userId, String authenticatedUserId) {
+        if (!userId.toString().equals(authenticatedUserId)) {
+            log.warn("Authorization failed: User {} attempted to access account of user {}", authenticatedUserId, userId);
+            throw new AccessDeniedException("You are not authorized to perform operations on this account");
+        }
     }
 }

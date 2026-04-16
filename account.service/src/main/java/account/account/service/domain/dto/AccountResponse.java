@@ -1,6 +1,5 @@
 package account.account.service.domain.dto;
 
-import account.account.service.domain.entity.Account;
 import account.account.service.domain.enums.AccountStatus;
 
 import java.math.BigDecimal;
@@ -15,14 +14,4 @@ public record AccountResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static AccountResponse from(Account account) {
-        return new AccountResponse(
-                account.getId(),
-                account.getUserId(),
-                account.getBalance(),
-                account.getStatus(),
-                account.getCreatedAt(),
-                account.getUpdatedAt()
-        );
-    }
 }

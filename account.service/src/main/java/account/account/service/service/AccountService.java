@@ -3,6 +3,7 @@ package account.account.service.service;
 import account.account.service.domain.dto.AccountResponse;
 import account.account.service.domain.entity.Account;
 import account.account.service.domain.enums.AccountStatus;
+import account.account.service.domain.mapper.AccountMapper;
 import account.account.service.exception.BusinessException;
 import account.account.service.exception.InsufficientBalanceException;
 import account.account.service.repository.AccountRepository;
@@ -22,11 +23,12 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository repository;
+    private final AccountMapper mapper;
 
     @Transactional
     public AccountResponse createAccount(UUID userId) {
         if (repository.existsByUserId(userId)) {
-            throw new BusinessException("Já existe uma conta para este usuário");
+            throw new BusinessException("Account already exists for this user");
         }
 
         var account = Account.builder()
@@ -36,38 +38,38 @@ public class AccountService {
                 .build();
 
         var saved = repository.save(account);
-        log.info("Conta criada para userId={}", userId);
-        return AccountResponse.from(saved);
+        log.info("Account created for userId={}", userId);
+        return mapper.toResponse(saved);
     }
 
     @Cacheable(value = "accounts", key = "#userId")
     @Transactional(readOnly = true)
     public AccountResponse getByUserId(UUID userId) {
         var account = repository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException("Conta não encontrada"));
-        return AccountResponse.from(account);
+                .orElseThrow(() -> new BusinessException("Account not found"));
+        return mapper.toResponse(account);
     }
 
     @CacheEvict(value = "accounts", key = "#userId")
     @Transactional
     public AccountResponse deposit(UUID userId, BigDecimal amount) {
         var account = repository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new BusinessException("Conta não encontrada"));
+                .orElseThrow(() -> new BusinessException("Account not found"));
 
         validateAccountActive(account);
 
         account.setBalance(account.getBalance().add(amount));
         var saved = repository.save(account);
 
-        log.info("Depósito de {} realizado na conta userId={}", amount, userId);
-        return AccountResponse.from(saved);
+        log.info("Deposit of {} performed on account userId={}", amount, userId);
+        return mapper.toResponse(saved);
     }
 
     @CacheEvict(value = "accounts", key = "#userId")
     @Transactional
     public AccountResponse withdraw(UUID userId, BigDecimal amount) {
         var account = repository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new BusinessException("Conta não encontrada"));
+                .orElseThrow(() -> new BusinessException("Account not found"));
 
         validateAccountActive(account);
 
@@ -78,26 +80,26 @@ public class AccountService {
         account.setBalance(account.getBalance().subtract(amount));
         var saved = repository.save(account);
 
-        log.info("Saque de {} realizado na conta userId={}", amount, userId);
-        return AccountResponse.from(saved);
+        log.info("Withdrawal of {} performed on account userId={}", amount, userId);
+        return mapper.toResponse(saved);
     }
 
     @CacheEvict(value = "accounts", key = "#userId")
     @Transactional
     public AccountResponse blockAccount(UUID userId) {
         var account = repository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException("Conta não encontrada"));
+                .orElseThrow(() -> new BusinessException("Account not found"));
 
         account.setStatus(AccountStatus.BLOCKED);
         var saved = repository.save(account);
 
-        log.info("Conta bloqueada para userId={}", userId);
-        return AccountResponse.from(saved);
+        log.info("Account blocked for userId={}", userId);
+        return mapper.toResponse(saved);
     }
 
     private void validateAccountActive(Account account) {
         if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new BusinessException("Conta não está ativa");
+            throw new BusinessException("Account is not active");
         }
     }
 }
