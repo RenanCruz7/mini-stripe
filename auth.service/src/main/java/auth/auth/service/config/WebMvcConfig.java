@@ -1,19 +1,10 @@
 package auth.auth.service.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
-
-    private final RateLimitingInterceptor rateLimitingInterceptor;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(rateLimitingInterceptor);
-    }
+    // Resilience4j rate limiting é aplicado via @RateLimiter nos controllers
+    // O RateLimitingInterceptor manual foi substituído por Resilience4j annotations
 }
-
