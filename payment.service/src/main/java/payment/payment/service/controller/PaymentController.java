@@ -1,5 +1,6 @@
 package payment.payment.service.controller;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +24,21 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    @RateLimiter(name = "paymentCreation")
     @PostMapping
     public ResponseEntity<PaymentResponse> createPayment(
             @Valid @RequestBody CreatePaymentRequest request,
             @RequestHeader("Authorization") String authorizationHeader,
             Authentication authentication
     ) {
+        // Validate user ownership - prevent IDOR vulnerability
+        String authenticatedUserId = authentication.getName();
+        if (!authenticatedUserId.equals(request.userId().toString())) {
+            log.warn("Authorization failed: User {} attempted to create payment for user {}",
+                    authenticatedUserId, request.userId());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         log.info("Payment request received for userId: {}", request.userId());
 
         PaymentResponse response = paymentService.createPayment(request, authorizationHeader);

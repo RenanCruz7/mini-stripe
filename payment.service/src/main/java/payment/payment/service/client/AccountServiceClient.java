@@ -44,17 +44,17 @@ public class AccountServiceClient {
 
             log.info("Withdraw successful for userId: {} amount: {}", userId, amount);
         } catch (WebClientResponseException.BadRequest ex) {
-            log.error("Bad request when withdrawing from account service: {}", ex.getMessage());
-            throw new AccountServiceException("Invalid withdraw request: " + ex.getMessage());
+            log.error("Bad request when withdrawing from account service");
+            throw new AccountServiceException("Invalid withdraw request");
         } catch (WebClientResponseException.NotFound ex) {
             log.error("Account not found for userId: {}", userId);
             throw new AccountServiceException("Account not found");
         } catch (WebClientResponseException ex) {
-            log.error("Account service error: {} - {}", ex.getStatusCode(), ex.getMessage());
-            throw new AccountServiceException("Account service unavailable: " + ex.getMessage());
+            log.error("Account service error: status {}", ex.getStatusCode());
+            throw new AccountServiceException("Account service unavailable");
         } catch (Exception ex) {
-            log.error("Unexpected error during withdraw: {}", ex.getMessage(), ex);
-            throw new PaymentProcessingException("Error communicating with account service: " + ex.getMessage());
+            log.error("Unexpected error during withdraw");
+            throw new PaymentProcessingException("Error communicating with account service");
         }
     }
 
