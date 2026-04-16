@@ -129,7 +129,9 @@ services:
       start_period: 10s
 
   account-service:
-    image: mini-stripe-account-service:latest
+    build:
+      context: ./account.service
+      dockerfile: Dockerfile
     container_name: account-service
     ports:
       - "8082:8082"
