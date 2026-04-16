@@ -1,11 +1,21 @@
-# Use imagem base padrão com Java 21 (igual a auth.service)
-FROM eclipse-temurin:21-jdk-alpine
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
+COPY pom.xml .
+COPY src ./src
+COPY mvnw .
+COPY .mvn .mvn
 
-# Copiar apenas o JAR compilado
-COPY target/account.service-*.jar app.jar
+RUN chmod +x ./mvnw && ./mvnw package -DskipTests
+
+# Stage 2: Runtime (imagem final menor)
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/target/account.service-*.jar app.jar
 
 EXPOSE 8082
 
