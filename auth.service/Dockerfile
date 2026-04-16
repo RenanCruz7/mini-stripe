@@ -1,5 +1,5 @@
-# Use Alpine Linux with Java pre-installed (or any local image)
-FROM eclipse-temurin:21-jdk-focal
+# Use Alpine Linux with Java 21
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 
