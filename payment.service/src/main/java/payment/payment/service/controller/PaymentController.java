@@ -31,19 +31,14 @@ public class PaymentController {
             @RequestHeader("Authorization") String authorizationHeader,
             Authentication authentication
     ) {
-        // Validate user ownership - prevent IDOR vulnerability
         String authenticatedUserId = authentication.getName();
-        if (!authenticatedUserId.equals(request.userId().toString())) {
-            log.warn("Authorization failed: User {} attempted to create payment for user {}",
-                    authenticatedUserId, request.userId());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        log.info("Payment request received for userId: {} by authenticated user: {}", request.userId(), authenticatedUserId);
 
-        log.info("Payment request received for userId: {}", request.userId());
-
-        PaymentResponse response = paymentService.createPayment(request, authorizationHeader);
+        PaymentResponse response = paymentService.createPayment(request, authorizationHeader, authenticatedUserId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
+
+
 

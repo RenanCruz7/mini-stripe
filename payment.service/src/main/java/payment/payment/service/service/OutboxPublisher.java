@@ -1,10 +1,8 @@
 package payment.payment.service.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +13,11 @@ import java.util.List;
 
 @Slf4j
 @Service
-@EnableScheduling
 @RequiredArgsConstructor
 public class OutboxPublisher {
 
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
 
     @Scheduled(fixedDelay = 5000, initialDelay = 10000)
     @Transactional

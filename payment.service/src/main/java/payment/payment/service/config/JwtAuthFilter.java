@@ -41,7 +41,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
 
         // Valida se o token não está vazio
-        if (token == null || token.isEmpty() || token.trim().isEmpty()) {
+        if (token.isBlank()) {
             log.warn("Token JWT vazio ou inválido");
             filterChain.doFilter(request, response);
             return;
